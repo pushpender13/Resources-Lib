@@ -347,7 +347,93 @@ body[class*="category-california-resource-library"] {
 
   // Style the first post content cleanly
   .cooked {
-    font-size: 1rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--primary);
+    max-width: 900px;
+    padding: 2rem 0;
+  }
+}
+
+// Fallback: hide elements when resource topic banner is visible (for topic pages where body class differs)
+.resource-topic-view ~ #topic-title,
+.resource-topic-view ~ .post-stream .topic-meta-data,
+.resource-topic-view ~ .post-stream .thr-topic-stats,
+.resource-topic-view ~ .post-stream .thr-meta-bar {
+  display: none !important;
+}
+
+body:has(.resource-topic-view) {
+  #topic-title {
+    display: none !important;
+  }
+
+  .topic-meta-data {
+    display: none !important;
+  }
+
+  .thr-topic-stats,
+  .thr-meta-bar {
+    display: none !important;
+  }
+
+  .topic-post:not(:first-child) {
+    display: none !important;
+  }
+
+  .post-menu-area,
+  .post-actions {
+    display: none !important;
+  }
+
+  .topic-navigation,
+  .timeline-container,
+  .topic-progress {
+    display: none !important;
+  }
+
+  .topic-footer-buttons,
+  #reply-control {
+    display: none !important;
+  }
+
+  .more-topics__container,
+  .suggested-topics {
+    display: none !important;
+  }
+
+  .post-info,
+  .topic-map {
+    display: none !important;
+  }
+
+  .post__row.row {
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+    background: transparent !important;
+  }
+
+  .topic-body {
+    border: none;
+    padding-top: 0;
+  }
+
+  .topic-post:first-child {
+    .topic-avatar {
+      display: none !important;
+    }
+
+    .topic-body {
+      width: 100%;
+      float: none;
+      margin-left: 0;
+    }
+  }
+
+  .cooked {
+    font-size: 1.05rem;
     line-height: 1.7;
     color: var(--primary);
     max-width: 900px;
