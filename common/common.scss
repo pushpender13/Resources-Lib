@@ -10,6 +10,15 @@
     max-width: 700px !important;
 }
 
+// Hide Resource Library (10) and California Resources (61) and all their
+// sub-categories from the composer category chooser globally.
+.category-chooser .category-row[data-value="10"],
+.category-chooser .category-row[data-value="61"],
+.category-chooser .category-row[data-parent-category-id="10"],
+.category-chooser .category-row[data-parent-category-id="61"] {
+  display: none !important;
+}
+
 .custom-resource-page .post__row.row {
   border: 0 !important;
   background: none !important;
