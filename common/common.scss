@@ -7,7 +7,7 @@
   display: none !important;
 }
 
-.resource-library .post__row.row {
+.resource-library ~ .post__row.row {
     border: 0px !important;
     background: none !important;
 }
