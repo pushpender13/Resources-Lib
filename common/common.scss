@@ -311,6 +311,16 @@ body[class*="category-california-resource-library"] {
     background: transparent !important;
   }
 
+  // Hide topic meta data
+  .topic-meta-data {
+    display: none !important;
+  }
+
+  // Increase post text size
+  .cooked {
+    font-size: 105% !important;
+  }
+
   // Clean up post styling
   .topic-body {
     border: none;
