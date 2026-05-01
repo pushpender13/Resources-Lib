@@ -117,11 +117,34 @@ export default class ResourceLibrary extends Component {
     this.searchQuery = e.target.value;
   }
 
+  get hiddenCategoryIds() {
+    const ids = [...this.ROOTS.map((r) => r.id)];
+    const allCategories = this.site.categories || [];
+    this.ROOTS.forEach((root) => {
+      allCategories
+        .filter((c) => c.parent_category_id === root.id)
+        .forEach((c) => ids.push(c.id));
+    });
+    return ids;
+  }
+
   @action
   openNewResource() {
+    const hiddenIds = this.hiddenCategoryIds;
+    const styleId = "resource-library-composer-filter";
+    let styleEl = document.getElementById(styleId);
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+    const selectors = hiddenIds
+      .map((id) => `.category-chooser .category-row[data-value="${id}"]`)
+      .join(",\n");
+    styleEl.textContent = `${selectors} { display: none !important; }`;
+
     this.composer.open({
       action: Composer.CREATE_TOPIC,
-      categoryId: this.activeRootId,
       draftKey: Composer.CREATE_TOPIC,
       draftSequence: 0,
     });
