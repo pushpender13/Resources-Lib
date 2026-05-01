@@ -1,0 +1,27 @@
+{
+  "name": "resource-library-custom-page",
+  "about_url": "",
+  "license_url": "",
+  "component": true,
+  "minimum_discourse_version": "3.2.0",
+  "maximum_discourse_version": null,
+  "assets": {},
+  "color_schemes": {},
+  "modifiers": {},
+  "settings": [
+    {
+      "name": "resource_root_category_ids",
+      "type": "list",
+      "default": "10|61",
+      "description": "Root category IDs for Resource Library (e.g. 10|61)"
+    },
+    {
+      "name": "topics_per_category",
+      "type": "integer",
+      "default": 5,
+      "min": 1,
+      "max": 20,
+      "description": "Number of topics to show per category"
+    }
+  ]
+}
