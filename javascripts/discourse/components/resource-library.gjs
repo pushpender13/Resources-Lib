@@ -154,6 +154,24 @@ export default class ResourceLibrary extends Component {
       draftKey: Composer.CREATE_TOPIC,
       draftSequence: 0,
     });
+
+    this._watchComposerClose();
+  }
+
+  _watchComposerClose() {
+    const styleId = "resource-library-composer-filter";
+    const check = () => {
+      const composerEl = document.getElementById("reply-control");
+      const isClosed =
+        !composerEl || composerEl.classList.contains("closed");
+      if (isClosed) {
+        const el = document.getElementById(styleId);
+        if (el) el.remove();
+      } else {
+        requestAnimationFrame(check);
+      }
+    };
+    requestAnimationFrame(check);
   }
 
   get filteredCategories() {
