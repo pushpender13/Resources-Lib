@@ -3,7 +3,6 @@ import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
 import { ajax } from "discourse/lib/ajax";
 import { showComposer } from "discourse/lib/composer";
-import { hbs } from "ember-cli-htmlbars";
 
 export default class ResourceLibrary extends Component {
   @tracked activeRoot = null;
@@ -106,7 +105,7 @@ export default class ResourceLibrary extends Component {
     );
   }
 
-  static template = hbs`
+  <template>
     <div class="custom-resource-page">
 
       <div class="header">
@@ -140,5 +139,5 @@ export default class ResourceLibrary extends Component {
       </div>
 
     </div>
-  `;
+  </template>
 }
