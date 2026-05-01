@@ -291,8 +291,9 @@ body[class*="category-california-resource-library"] {
     display: none !important;
   }
 
-  // Hide topic stats widget from other theme components
-  .thr-topic-stats {
+  // Hide topic stats and meta bar widgets from other theme components
+  .thr-topic-stats,
+  .thr-meta-bar {
     display: none !important;
   }
 
