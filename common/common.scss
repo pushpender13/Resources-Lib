@@ -6,6 +6,9 @@
 .resource-library ~ .latest-topic-list-container {
   display: none !important;
 }
+#reply-control .category-input .category-chooser .select-kit-body {
+    max-width: 700px !important;
+}
 
 .custom-resource-page .post__row.row {
   border: 0 !important;
