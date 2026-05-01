@@ -1,143 +1,219 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
+import { fn } from "@ember/helper";
+import { on } from "@ember/modifier";
+import { service } from "@ember/service";
+import { eq } from "truth-helpers";
 import { ajax } from "discourse/lib/ajax";
-import { showComposer } from "discourse/lib/composer";
+import Composer from "discourse/models/composer";
+import CategoryNode from "./category-node";
 
 export default class ResourceLibrary extends Component {
-  @tracked activeRoot = null;
-  @tracked tree = [];
+  @service composer;
+  @service site;
+
+  @tracked activeRootId = 10;
+  @tracked categories = [];
   @tracked topicsMap = {};
-  @tracked search = "";
+  @tracked searchQuery = "";
+  @tracked loading = true;
 
   ROOTS = [
-    { id: 10, slug: "resource-library", label: "All Resources" },
-    { id: 61, slug: "california-resource-library", label: "California Resources" }
+    { id: 10, label: "All Resources" },
+    { id: 61, label: "California Resources" },
   ];
 
   constructor() {
     super(...arguments);
-    this.init();
+    this.loadData();
   }
 
-  async init() {
-    this.activeRoot = this.ROOTS[0];
-    await this.loadTree(this.activeRoot.id);
+  async loadData() {
+    this.loading = true;
+    this.topicsMap = {};
+    this.categories = [];
+
+    try {
+      const allCategories = this.site.categories || [];
+      const children = allCategories.filter(
+        (c) => c.parent_category_id === this.activeRootId
+      );
+
+      const tree = children.map((parent) => {
+        const subs = allCategories.filter(
+          (c) => c.parent_category_id === parent.id
+        );
+        return {
+          ...parent,
+          subcategories: subs.map((sub) => {
+            const subSubs = allCategories.filter(
+              (c) => c.parent_category_id === sub.id
+            );
+            return { ...sub, subcategories: subSubs };
+          }),
+        };
+      });
+
+      this.categories = tree;
+      await this.loadAllTopics(tree);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("ResourceLibrary: failed to load", e);
+    } finally {
+      this.loading = false;
+    }
   }
 
-  async loadTree(rootId) {
-    const res = await ajax(`/c/${rootId}/show.json`);
-    const categories = res.category_list.categories;
-
-    this.tree = this.buildTree(categories, rootId);
-    await this.loadTopics();
-  }
-
-  buildTree(categories, rootId) {
+  async loadAllTopics(tree) {
+    const leafCategories = this.getLeafCategories(tree);
     const map = {};
 
-    categories.forEach(c => {
-      map[c.id] = { ...c, children: [] };
-    });
+    const batches = [];
+    for (let i = 0; i < leafCategories.length; i += 5) {
+      batches.push(leafCategories.slice(i, i + 5));
+    }
 
-    categories.forEach(c => {
-      if (c.parent_category_id && map[c.parent_category_id]) {
-        map[c.parent_category_id].children.push(map[c.id]);
-      }
-    });
-
-    return Object.values(map).filter(c => c.parent_category_id === rootId);
-  }
-
-  async loadTopics() {
-    let map = {};
-
-    for (let cat of this.flatten(this.tree)) {
-      const res = await ajax(`/c/${cat.id}/l/latest.json?per_page=5`);
-      map[cat.id] = res.topic_list.topics;
+    for (const batch of batches) {
+      const results = await Promise.all(
+        batch.map((cat) =>
+          ajax(`/c/${cat.slug}/${cat.id}/l/latest.json?per_page=5`)
+            .then((res) => ({ id: cat.id, topics: res.topic_list.topics }))
+            .catch(() => ({ id: cat.id, topics: [] }))
+        )
+      );
+      results.forEach((r) => {
+        map[r.id] = r.topics;
+      });
     }
 
     this.topicsMap = map;
   }
 
-  flatten(nodes) {
-    let out = [];
-    nodes.forEach(n => {
-      out.push(n);
-      if (n.children?.length) {
-        out = out.concat(this.flatten(n.children));
-      }
+  getLeafCategories(tree) {
+    const leaves = [];
+    const walk = (nodes) => {
+      nodes.forEach((n) => {
+        if (n.subcategories && n.subcategories.length > 0) {
+          walk(n.subcategories);
+        } else {
+          leaves.push(n);
+        }
+      });
+    };
+    walk(tree);
+    return leaves;
+  }
+
+  @action
+  switchRoot(root) {
+    this.activeRootId = root.id;
+    this.searchQuery = "";
+    this.loadData();
+  }
+
+  @action
+  onSearchInput(e) {
+    this.searchQuery = e.target.value;
+  }
+
+  @action
+  openNewResource() {
+    this.composer.open({
+      action: Composer.CREATE_TOPIC,
+      categoryId: this.activeRootId,
+      draftKey: Composer.CREATE_TOPIC,
+      draftSequence: 0,
     });
-    return out;
   }
 
-  @action
-  async switchRoot(root) {
-    this.activeRoot = root;
-    await this.loadTree(root.id);
+  get filteredCategories() {
+    if (!this.searchQuery.trim()) {
+      return this.categories;
+    }
+    const q = this.searchQuery.toLowerCase();
+    return this.filterTree(this.categories, q);
   }
 
-  @action
-  newResource() {
-    showComposer(this, {
-      action: "createTopic",
-      categoryId: this.activeRoot.id,
-      allowedCategoryIds: this.getAllowedIds()
-    });
-  }
+  filterTree(cats, query) {
+    return cats
+      .map((cat) => {
+        const filteredSubs = cat.subcategories
+          ? this.filterTree(cat.subcategories, query)
+          : [];
 
-  getAllowedIds() {
-    return [
-      this.activeRoot.id,
-      ...this.flatten(this.tree).map(c => c.id)
-    ];
-  }
+        const catTopics = this.topicsMap[cat.id] || [];
+        const matchingTopics = catTopics.filter((t) =>
+          t.title.toLowerCase().includes(query)
+        );
 
-  @action
-  updateSearch(e) {
-    this.search = e.target.value.toLowerCase();
-  }
-
-  filter(topics) {
-    if (!this.search) return topics;
-    return topics.filter(t =>
-      t.title.toLowerCase().includes(this.search)
-    );
+        if (filteredSubs.length > 0 || matchingTopics.length > 0) {
+          return { ...cat, subcategories: filteredSubs, _filteredTopics: matchingTopics };
+        }
+        return null;
+      })
+      .filter(Boolean);
   }
 
   <template>
-    <div class="custom-resource-page">
+    <div class="resource-library">
+      <div class="resource-library__header">
+        <h1 class="resource-library__title">Resource Library</h1>
+        <p class="resource-library__description">
+          Curated reports, briefs, and guides on Medicaid policy — organized by topic for easy reference.
+        </p>
+      </div>
 
-      <div class="header">
-        {{#each this.ROOTS as |root|}}
+      <div class="resource-library__controls">
+        <div class="resource-library__tabs">
+          {{#each this.ROOTS as |root|}}
+            <button
+              class="resource-library__tab {{if (eq root.id this.activeRootId) 'resource-library__tab--active'}}"
+              type="button"
+              {{on "click" (fn this.switchRoot root)}}
+            >
+              {{root.label}}
+            </button>
+          {{/each}}
+        </div>
+
+        <div class="resource-library__actions">
+          <div class="resource-library__search">
+            <input
+              type="text"
+              class="resource-library__search-input"
+              placeholder="Search resources..."
+              value={{this.searchQuery}}
+              {{on "input" this.onSearchInput}}
+            />
+          </div>
+
           <button
-            class={{if (eq root.id this.activeRoot.id) "active"}}
-            {{on "click" (fn this.switchRoot root)}}
+            class="resource-library__new-btn"
+            type="button"
+            {{on "click" this.openNewResource}}
           >
-            {{root.label}}
+            + New Resource
           </button>
-        {{/each}}
-
-        <input
-          placeholder="Search resources..."
-          {{on "input" this.updateSearch}}
-        />
-
-        <button {{on "click" this.newResource}}>
-          + New Resource
-        </button>
+        </div>
       </div>
 
-      <div class="tree">
-        {{#each this.tree as |cat|}}
-          <CategoryNode
-            @cat={{cat}}
-            @topics={{this.topicsMap}}
-            @filter={{this.filter}}
-          />
-        {{/each}}
+      <div class="resource-library__content">
+        {{#if this.loading}}
+          <div class="resource-library__loading">Loading resources...</div>
+        {{else if this.filteredCategories.length}}
+          {{#each this.filteredCategories as |cat|}}
+            <CategoryNode
+              @category={{cat}}
+              @topicsMap={{this.topicsMap}}
+              @searchQuery={{this.searchQuery}}
+              @maxTopics={{5}}
+            />
+          {{/each}}
+        {{else}}
+          <div class="resource-library__empty">No resources found.</div>
+        {{/if}}
       </div>
-
     </div>
   </template>
 }

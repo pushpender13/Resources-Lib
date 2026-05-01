@@ -1,9 +1,20 @@
+import Component from "@glimmer/component";
 import ResourceLibrary from "../../components/resource-library";
 
-export default {
-  shouldRender() {
-    return true;
-  },
+export default class ResourceLibraryConnector extends Component {
+  RESOURCE_CATEGORY_IDS = [10, 61];
 
-  component: ResourceLibrary
-};
+  get shouldShow() {
+    const category = this.args.outletArgs?.category;
+    if (!category) {
+      return false;
+    }
+    return this.RESOURCE_CATEGORY_IDS.includes(category.id);
+  }
+
+  <template>
+    {{#if this.shouldShow}}
+      <ResourceLibrary />
+    {{/if}}
+  </template>
+}
