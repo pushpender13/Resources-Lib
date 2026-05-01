@@ -168,7 +168,7 @@ body.category-california-resource-library {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 0;
-    border-bottom: 2.5px solid rgb(27, 58, 92);
+    border-bottom: 1px solid var(--primary-low);
   }
 }
 
@@ -177,7 +177,7 @@ body.category-california-resource-library {
   margin-bottom: 1.5rem;
 
   & > .category-node__header {
-    border-bottom: 2px solid var(--primary-low-mid);
+    border-bottom: 2.5px solid rgb(27, 58, 92);
     padding-bottom: 0.75rem;
     margin-bottom: 0.5rem;
   }
