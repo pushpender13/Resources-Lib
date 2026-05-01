@@ -302,6 +302,15 @@ body[class*="category-california-resource-library"] {
     display: none !important;
   }
 
+  // Remove post row card styling
+  .post__row.row {
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+    background: transparent !important;
+  }
+
   // Clean up post styling
   .topic-body {
     border: none;
