@@ -1,14 +1,13 @@
 import Component from "@glimmer/component";
-import { hbs } from "ember-cli-htmlbars";
 
 export default class CategoryNode extends Component {
-  static template = hbs`
+  <template>
     <div class="category-block">
       <h3>{{@cat.name}}</h3>
 
-      {{#if @topics[@cat.id]}}
+      {{#if (get @topics @cat.id)}}
         <ul>
-          {{#each (call @filter @topics[@cat.id]) as |topic|}}
+          {{#each (this.filter (get @topics @cat.id)) as |topic|}}
             <li>
               <a href="/t/{{topic.slug}}/{{topic.id}}">
                 {{topic.title}}
@@ -32,5 +31,9 @@ export default class CategoryNode extends Component {
         </div>
       {{/if}}
     </div>
-  `;
+  </template>
+
+  filter(topics) {
+    return this.args.filter ? this.args.filter(topics) : topics;
+  }
 }
