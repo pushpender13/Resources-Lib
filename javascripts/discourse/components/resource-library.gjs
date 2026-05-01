@@ -117,20 +117,26 @@ export default class ResourceLibrary extends Component {
     this.searchQuery = e.target.value;
   }
 
-  get hiddenCategoryIds() {
-    const ids = [...this.ROOTS.map((r) => r.id)];
+  get allowedCategoryIds() {
     const allCategories = this.site.categories || [];
+    const allowed = [];
     this.ROOTS.forEach((root) => {
-      allCategories
-        .filter((c) => c.parent_category_id === root.id)
-        .forEach((c) => ids.push(c.id));
+      const firstLevel = allCategories.filter(
+        (c) => c.parent_category_id === root.id
+      );
+      firstLevel.forEach((parent) => {
+        const subSubs = allCategories.filter(
+          (c) => c.parent_category_id === parent.id
+        );
+        subSubs.forEach((s) => allowed.push(s.id));
+      });
     });
-    return ids;
+    return allowed;
   }
 
   @action
   openNewResource() {
-    const hiddenIds = this.hiddenCategoryIds;
+    const allowedIds = this.allowedCategoryIds;
     const styleId = "resource-library-composer-filter";
     let styleEl = document.getElementById(styleId);
     if (!styleEl) {
@@ -138,10 +144,10 @@ export default class ResourceLibrary extends Component {
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
-    const selectors = hiddenIds
+    const allowSelectors = allowedIds
       .map((id) => `.category-chooser .category-row[data-value="${id}"]`)
       .join(",\n");
-    styleEl.textContent = `${selectors} { display: none !important; }`;
+    styleEl.textContent = `.category-chooser .category-row { display: none !important; }\n${allowSelectors} { display: flex !important; }`;
 
     this.composer.open({
       action: Composer.CREATE_TOPIC,
