@@ -7,6 +7,11 @@
   display: none !important;
 }
 
+.resource-library .post__row.row {
+    border: 0px !important;
+    background: none !important;
+}
+
 
 // When browsing resource categories, hide the default topic list
 body.category-resource-library,
