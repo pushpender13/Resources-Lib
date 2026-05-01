@@ -88,7 +88,7 @@ body.category-california-resource-library {
   }
 
   &--active {
-    background: rgb(27, 58, 92)
+    background: rgb(27, 58, 92);
     color: var(--secondary);
     border-color: var(--primary);
 
@@ -137,7 +137,7 @@ body.category-california-resource-library {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
-  white-space: nowrap;
+  white-space: nowrap; 
 
   &:hover {
     background: var(--tertiary-hover);
