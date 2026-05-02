@@ -207,7 +207,7 @@ export default class ResourceLibrary extends Component {
       <div class="resource-library__header">
         <h1 class="resource-library__title">Resource Library</h1>
         <p class="resource-library__description">
-          Curated reports, briefs, and guides on Medicaid policy — organized by topic for easy reference.
+          Check back here regularly for new resources and if there’s something you think would be helpful to include, please let us know (send it to <a href="mailto:MASH@healthlaw.org">MASH@healthlaw.org</a>)! 
         </p>
       </div>
 
