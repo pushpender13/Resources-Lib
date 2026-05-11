@@ -12,9 +12,13 @@ export default class ResourceLibraryConnector extends Component {
     return this.RESOURCE_CATEGORY_IDS.includes(category.id);
   }
 
+  get currentCategory() {
+    return this.args.outletArgs?.category;
+  }
+
   <template>
     {{#if this.shouldShow}}
-      <ResourceLibrary />
+      <ResourceLibrary @category={{this.currentCategory}} />
     {{/if}}
   </template>
 }

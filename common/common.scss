@@ -126,6 +126,31 @@ body.category-california-resource-library {
   }
 }
 
+.resource-library__manage-btn {
+  margin-top: -9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid var(--primary-low);
+  background: var(--secondary);
+  color: var(--primary-medium);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--primary-very-low);
+    color: var(--primary);
+    border-color: var(--primary-low-mid);
+  }
+}
+
+.resource-library__wrench-icon {
+  display: block;
+}
+
 .resource-library__new-btn {
   margin-top: -9px;
   padding: 0.5rem 1rem;
@@ -137,7 +162,7 @@ body.category-california-resource-library {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
-  white-space: nowrap; 
+  white-space: nowrap;
 
   &:hover {
     background: var(--tertiary-hover);
@@ -228,6 +253,34 @@ body.category-california-resource-library {
 .category-node__topic {
   padding: 0.2rem 0;
   line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.category-node__delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--primary-low-mid);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  opacity: 0;
+
+  .category-node__topic:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: #fee2e2;
+    color: #dc2626;
+  }
 }
 
 .category-node__topic-link {

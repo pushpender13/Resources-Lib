@@ -12,8 +12,10 @@ import CategoryNode from "./category-node";
 export default class ResourceLibrary extends Component {
   @service composer;
   @service site;
+  @service currentUser;
+  @service router;
 
-  @tracked activeRootId = 10;
+  @tracked activeRootId = null;
   @tracked categories = [];
   @tracked topicsMap = {};
   @tracked searchQuery = "";
@@ -26,7 +28,27 @@ export default class ResourceLibrary extends Component {
 
   constructor() {
     super(...arguments);
+    this.activeRootId = this.initialRootId;
     this.loadData();
+  }
+
+  get initialRootId() {
+    const category = this.args.category;
+    if (category && category.id === 61) {
+      return 61;
+    }
+    return 10;
+  }
+
+  get dynamicTitle() {
+    if (this.activeRootId === 61) {
+      return "California Resource Library";
+    }
+    return "Resource Library";
+  }
+
+  get isStaffUser() {
+    return this.currentUser?.staff || this.currentUser?.admin || this.currentUser?.moderator;
   }
 
   async loadData() {
@@ -77,17 +99,21 @@ export default class ResourceLibrary extends Component {
     for (const batch of batches) {
       const results = await Promise.all(
         batch.map((cat) =>
-          ajax(`/c/${cat.slug}/${cat.id}/l/latest.json?per_page=5`)
+          ajax(`/c/${cat.slug}/${cat.id}/l/latest.json?per_page=50`)
             .then((res) => ({ id: cat.id, topics: res.topic_list.topics }))
             .catch(() => ({ id: cat.id, topics: [] }))
         )
       );
       results.forEach((r) => {
-        map[r.id] = r.topics;
+        map[r.id] = r.topics.filter((t) => !this.isAboutTopic(t));
       });
     }
 
     this.topicsMap = map;
+  }
+
+  isAboutTopic(topic) {
+    return topic.title && topic.title.toLowerCase().startsWith("about the");
   }
 
   getLeafCategories(tree) {
@@ -158,6 +184,11 @@ export default class ResourceLibrary extends Component {
     this._watchComposerClose();
   }
 
+  @action
+  openCategoryManager() {
+    window.open("/admin/site_settings/category/all_results?filter=categories", "_blank");
+  }
+
   _watchComposerClose() {
     const styleId = "resource-library-composer-filter";
     const check = () => {
@@ -202,12 +233,32 @@ export default class ResourceLibrary extends Component {
       .filter(Boolean);
   }
 
+  @action
+  async deleteTopic(topic) {
+    if (!confirm(`Are you sure you want to permanently delete "${topic.title}"?`)) {
+      return;
+    }
+
+    try {
+      await ajax(`/t/${topic.id}`, { type: "DELETE" });
+      const newMap = { ...this.topicsMap };
+      Object.keys(newMap).forEach((catId) => {
+        newMap[catId] = newMap[catId].filter((t) => t.id !== topic.id);
+      });
+      this.topicsMap = newMap;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to delete topic", e);
+      alert("Failed to delete topic. Please try again.");
+    }
+  }
+
   <template>
     <div class="resource-library">
       <div class="resource-library__header">
-        <h1 class="resource-library__title">Resource Library</h1>
+        <h1 class="resource-library__title">{{this.dynamicTitle}}</h1>
         <p class="resource-library__description">
-          Check back here regularly for new resources and if there’s something you think would be helpful to include, please let us know (send it to <a href="mailto:MASH@healthlaw.org">MASH@healthlaw.org</a>)! 
+          Check back here regularly for new resources and if there's something you think would be helpful to include, please let us know (send it to <a href="mailto:MASH@healthlaw.org">MASH@healthlaw.org</a>)!
         </p>
       </div>
 
@@ -235,6 +286,19 @@ export default class ResourceLibrary extends Component {
             />
           </div>
 
+          {{#if this.isStaffUser}}
+            <button
+              class="resource-library__manage-btn"
+              type="button"
+              title="Manage Categories"
+              {{on "click" this.openCategoryManager}}
+            >
+              <svg class="resource-library__wrench-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16">
+                <path fill="currentColor" d="M352 320c88.4 0 160-71.6 160-160c0-15.3-2.2-30.1-6.2-44.2c-3.1-10.8-16.4-13.2-24.3-5.3l-76.8 76.8c-3 3-7.1 4.7-11.3 4.7H336c-8.8 0-16-7.2-16-16V118.6c0-4.2 1.7-8.3 4.7-11.3l76.8-76.8c7.9-7.9 5.4-21.2-5.3-24.3C382.1 2.2 367.3 0 352 0C263.6 0 192 71.6 192 160c0 19.1 3.4 37.5 9.5 54.5L19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9l181.6-181.6c17 6.2 35.4 9.5 54.5 9.5zM80 456c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/>
+              </svg>
+            </button>
+          {{/if}}
+
           <button
             class="resource-library__new-btn"
             type="button"
@@ -255,6 +319,8 @@ export default class ResourceLibrary extends Component {
               @topicsMap={{this.topicsMap}}
               @searchQuery={{this.searchQuery}}
               @maxTopics={{5}}
+              @isStaff={{this.isStaffUser}}
+              @onDeleteTopic={{this.deleteTopic}}
             />
           {{/each}}
         {{else}}
