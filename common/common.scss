@@ -126,29 +126,8 @@ body.category-california-resource-library {
   }
 }
 
-.resource-library__manage-btn {
+.resource-library__actions .categories-admin-dropdown {
   margin-top: -9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 6px;
-  border: 1px solid var(--primary-low);
-  background: var(--secondary);
-  color: var(--primary-medium);
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: var(--primary-very-low);
-    color: var(--primary);
-    border-color: var(--primary-low-mid);
-  }
-}
-
-.resource-library__wrench-icon {
-  display: block;
 }
 
 .resource-library__new-btn {
@@ -295,19 +274,6 @@ body.category-california-resource-library {
   }
 }
 
-.category-node__more-link {
-  display: inline-block;
-  margin-left: 1.25rem;
-  margin-bottom: 0.75rem;
-  font-size: 0.8rem;
-  color: var(--tertiary);
-  text-decoration: none;
-  font-weight: 500;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
 
 // ==============================================
 // Resource Topic View (single topic page)

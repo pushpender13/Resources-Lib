@@ -7,13 +7,13 @@ import { service } from "@ember/service";
 import { eq } from "truth-helpers";
 import { ajax } from "discourse/lib/ajax";
 import Composer from "discourse/models/composer";
+import CategoriesAdminDropdown from "select-kit/components/categories-admin-dropdown";
 import CategoryNode from "./category-node";
 
 export default class ResourceLibrary extends Component {
   @service composer;
   @service site;
   @service currentUser;
-  @service router;
 
   @tracked activeRootId = null;
   @tracked categories = [];
@@ -49,6 +49,10 @@ export default class ResourceLibrary extends Component {
 
   get isStaffUser() {
     return this.currentUser?.staff || this.currentUser?.admin || this.currentUser?.moderator;
+  }
+
+  get topicsPerCategory() {
+    return settings?.topics_per_category || 5;
   }
 
   async loadData() {
@@ -184,11 +188,6 @@ export default class ResourceLibrary extends Component {
     this._watchComposerClose();
   }
 
-  @action
-  openCategoryManager() {
-    window.open("/admin/site_settings/category/all_results?filter=categories", "_blank");
-  }
-
   _watchComposerClose() {
     const styleId = "resource-library-composer-filter";
     const check = () => {
@@ -287,16 +286,7 @@ export default class ResourceLibrary extends Component {
           </div>
 
           {{#if this.isStaffUser}}
-            <button
-              class="resource-library__manage-btn"
-              type="button"
-              title="Manage Categories"
-              {{on "click" this.openCategoryManager}}
-            >
-              <svg class="resource-library__wrench-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="16" height="16">
-                <path fill="currentColor" d="M352 320c88.4 0 160-71.6 160-160c0-15.3-2.2-30.1-6.2-44.2c-3.1-10.8-16.4-13.2-24.3-5.3l-76.8 76.8c-3 3-7.1 4.7-11.3 4.7H336c-8.8 0-16-7.2-16-16V118.6c0-4.2 1.7-8.3 4.7-11.3l76.8-76.8c7.9-7.9 5.4-21.2-5.3-24.3C382.1 2.2 367.3 0 352 0C263.6 0 192 71.6 192 160c0 19.1 3.4 37.5 9.5 54.5L19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9l181.6-181.6c17 6.2 35.4 9.5 54.5 9.5zM80 456c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/>
-              </svg>
-            </button>
+            <CategoriesAdminDropdown />
           {{/if}}
 
           <button
@@ -318,7 +308,7 @@ export default class ResourceLibrary extends Component {
               @category={{cat}}
               @topicsMap={{this.topicsMap}}
               @searchQuery={{this.searchQuery}}
-              @maxTopics={{5}}
+              @maxTopics={{this.topicsPerCategory}}
               @isStaff={{this.isStaffUser}}
               @onDeleteTopic={{this.deleteTopic}}
             />

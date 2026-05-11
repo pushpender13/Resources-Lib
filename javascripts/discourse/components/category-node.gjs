@@ -15,14 +15,8 @@ export default class CategoryNode extends Component {
       topics = topics.filter((t) => t.title.toLowerCase().includes(query));
       return topics;
     }
-    return topics.slice(0, this.args.maxTopics || 5);
-  }
-
-  get hasMoreTopics() {
-    if (this.args.searchQuery?.trim()) {
-      return false;
-    }
-    return this.topics.length > (this.args.maxTopics || 5);
+    const max = this.args.maxTopics || 5;
+    return topics.slice(0, max);
   }
 
   get subcategories() {
@@ -32,10 +26,6 @@ export default class CategoryNode extends Component {
   get categoryUrl() {
     const cat = this.args.category;
     return `/c/${cat.slug}/${cat.id}`;
-  }
-
-  get hasContent() {
-    return this.visibleTopics.length > 0 || this.subcategories.length > 0;
   }
 
   <template>
@@ -81,12 +71,6 @@ export default class CategoryNode extends Component {
               </li>
             {{/each}}
           </ul>
-
-          {{#if this.hasMoreTopics}}
-            <a href={{this.categoryUrl}} class="category-node__more-link">
-              More...
-            </a>
-          {{/if}}
         {{/if}}
       {{/if}}
     </div>
