@@ -126,8 +126,24 @@ body.category-california-resource-library {
   }
 }
 
-.resource-library__actions .categories-admin-dropdown {
+.resource-library__manage-btn {
   margin-top: -9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem;
+  border-radius: 6px;
+  border: 1px solid var(--primary-low);
+  background: var(--secondary);
+  color: var(--primary-medium);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--primary-very-low);
+    color: var(--primary);
+    border-color: var(--primary-low-mid);
+  }
 }
 
 .resource-library__new-btn {

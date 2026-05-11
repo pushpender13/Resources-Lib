@@ -1,13 +1,12 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
-import { fn, hash } from "@ember/helper";
+import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { service } from "@ember/service";
 import { eq } from "truth-helpers";
 import { ajax } from "discourse/lib/ajax";
 import Composer from "discourse/models/composer";
-import CategoriesAdminDropdown from "discourse/select-kit/components/categories-admin-dropdown";
 import CategoryNode from "./category-node";
 
 export default class ResourceLibrary extends Component {
@@ -157,17 +156,16 @@ export default class ResourceLibrary extends Component {
   get allowedCategoryIds() {
     const allCategories = this.site.categories || [];
     const allowed = [];
-    this.ROOTS.forEach((root) => {
-      const firstLevel = allCategories.filter(
-        (c) => this.getParentId(c) === root.id
+    const collectDescendants = (parentId) => {
+      const children = allCategories.filter(
+        (c) => this.getParentId(c) === parentId
       );
-      firstLevel.forEach((parent) => {
-        const subSubs = allCategories.filter(
-          (c) => this.getParentId(c) === parent.id
-        );
-        subSubs.forEach((s) => allowed.push(s.id));
+      children.forEach((child) => {
+        allowed.push(child.id);
+        collectDescendants(child.id);
       });
-    });
+    };
+    this.ROOTS.forEach((root) => collectDescendants(root.id));
     return allowed;
   }
 
@@ -181,10 +179,15 @@ export default class ResourceLibrary extends Component {
       styleEl.id = styleId;
       document.head.appendChild(styleEl);
     }
-    const allowSelectors = allowedIds
-      .map((id) => `.category-chooser .category-row[data-value="${id}"]`)
-      .join(",\n");
-    styleEl.textContent = `.category-chooser .category-row { display: none !important; }\n${allowSelectors} { display: flex !important; }`;
+
+    if (allowedIds.length > 0) {
+      const allowSelectors = allowedIds
+        .map((id) => `.category-chooser .category-row[data-value="${id}"]`)
+        .join(",\n");
+      styleEl.textContent = `.category-chooser .category-row { display: none !important; }\n${allowSelectors} { display: flex !important; }`;
+    } else {
+      styleEl.textContent = "";
+    }
 
     this.composer.open({
       action: Composer.CREATE_TOPIC,
@@ -260,15 +263,8 @@ export default class ResourceLibrary extends Component {
   }
 
   @action
-  onAdminDropdownChange(actionId) {
-    switch (actionId) {
-      case "create":
-        this.router.transitionTo("newCategory");
-        break;
-      case "reorder":
-        this.router.transitionTo("categories.reorder");
-        break;
-    }
+  openNewCategory() {
+    this.router.transitionTo("newCategory");
   }
 
   <template>
@@ -305,10 +301,14 @@ export default class ResourceLibrary extends Component {
           </div>
 
           {{#if this.isStaffUser}}
-            <CategoriesAdminDropdown
-              @onChange={{this.onAdminDropdownChange}}
-              @options={{hash triggerOnChangeOnTab=false}}
-            />
+            <button
+              class="resource-library__manage-btn btn btn-icon btn-default"
+              type="button"
+              title="New Category"
+              {{on "click" this.openNewCategory}}
+            >
+              <svg class="fa d-icon d-icon-wrench svg-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14"><path fill="currentColor" d="M352 320c88.4 0 160-71.6 160-160c0-15.3-2.2-30.1-6.2-44.2c-3.1-10.8-16.4-13.2-24.3-5.3l-76.8 76.8c-3 3-7.1 4.7-11.3 4.7H336c-8.8 0-16-7.2-16-16V118.6c0-4.2 1.7-8.3 4.7-11.3l76.8-76.8c7.9-7.9 5.4-21.2-5.3-24.3C382.1 2.2 367.3 0 352 0C263.6 0 192 71.6 192 160c0 19.1 3.4 37.5 9.5 54.5L19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9l181.6-181.6c17 6.2 35.4 9.5 54.5 9.5zM80 456c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg>
+            </button>
           {{/if}}
 
           <button
