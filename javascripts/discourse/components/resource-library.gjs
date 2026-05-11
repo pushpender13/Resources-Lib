@@ -1,21 +1,22 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
-import { fn } from "@ember/helper";
+import { fn, hash } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { service } from "@ember/service";
 import { eq } from "truth-helpers";
 import { ajax } from "discourse/lib/ajax";
 import Composer from "discourse/models/composer";
-import CategoriesAdminDropdown from "select-kit/components/categories-admin-dropdown";
+import CategoriesAdminDropdown from "discourse/select-kit/components/categories-admin-dropdown";
 import CategoryNode from "./category-node";
 
 export default class ResourceLibrary extends Component {
   @service composer;
+  @service router;
   @service site;
   @service currentUser;
 
-  @tracked activeRootId = null;
+  @tracked activeRootId = 10;
   @tracked categories = [];
   @tracked topicsMap = {};
   @tracked searchQuery = "";
@@ -28,16 +29,18 @@ export default class ResourceLibrary extends Component {
 
   constructor() {
     super(...arguments);
-    this.activeRootId = this.initialRootId;
-    this.loadData();
-  }
-
-  get initialRootId() {
     const category = this.args.category;
     if (category && category.id === 61) {
-      return 61;
+      this.activeRootId = 61;
     }
-    return 10;
+    this._initLoad();
+  }
+
+  async _initLoad() {
+    await this.loadData();
+    if (this.categories.length === 0 && this.site.categories?.length === 0) {
+      setTimeout(() => this.loadData(), 1000);
+    }
   }
 
   get dynamicTitle() {
@@ -55,6 +58,10 @@ export default class ResourceLibrary extends Component {
     return settings?.topics_per_category || 5;
   }
 
+  getParentId(category) {
+    return category.parent_category_id ?? category.parentCategory?.id ?? null;
+  }
+
   async loadData() {
     this.loading = true;
     this.topicsMap = {};
@@ -63,18 +70,18 @@ export default class ResourceLibrary extends Component {
     try {
       const allCategories = this.site.categories || [];
       const children = allCategories.filter(
-        (c) => c.parent_category_id === this.activeRootId
+        (c) => this.getParentId(c) === this.activeRootId
       );
 
       const tree = children.map((parent) => {
         const subs = allCategories.filter(
-          (c) => c.parent_category_id === parent.id
+          (c) => this.getParentId(c) === parent.id
         );
         return {
           ...parent,
           subcategories: subs.map((sub) => {
             const subSubs = allCategories.filter(
-              (c) => c.parent_category_id === sub.id
+              (c) => this.getParentId(c) === sub.id
             );
             return { ...sub, subcategories: subSubs };
           }),
@@ -103,8 +110,8 @@ export default class ResourceLibrary extends Component {
     for (const batch of batches) {
       const results = await Promise.all(
         batch.map((cat) =>
-          ajax(`/c/${cat.slug}/${cat.id}/l/latest.json?per_page=50`)
-            .then((res) => ({ id: cat.id, topics: res.topic_list.topics }))
+          ajax(`/c/${cat.slug}/${cat.id}/l/latest.json?per_page=30`)
+            .then((res) => ({ id: cat.id, topics: res.topic_list?.topics || [] }))
             .catch(() => ({ id: cat.id, topics: [] }))
         )
       );
@@ -152,11 +159,11 @@ export default class ResourceLibrary extends Component {
     const allowed = [];
     this.ROOTS.forEach((root) => {
       const firstLevel = allCategories.filter(
-        (c) => c.parent_category_id === root.id
+        (c) => this.getParentId(c) === root.id
       );
       firstLevel.forEach((parent) => {
         const subSubs = allCategories.filter(
-          (c) => c.parent_category_id === parent.id
+          (c) => this.getParentId(c) === parent.id
         );
         subSubs.forEach((s) => allowed.push(s.id));
       });
@@ -252,6 +259,18 @@ export default class ResourceLibrary extends Component {
     }
   }
 
+  @action
+  onAdminDropdownChange(actionId) {
+    switch (actionId) {
+      case "create":
+        this.router.transitionTo("newCategory");
+        break;
+      case "reorder":
+        this.router.transitionTo("categories.reorder");
+        break;
+    }
+  }
+
   <template>
     <div class="resource-library">
       <div class="resource-library__header">
@@ -286,7 +305,10 @@ export default class ResourceLibrary extends Component {
           </div>
 
           {{#if this.isStaffUser}}
-            <CategoriesAdminDropdown />
+            <CategoriesAdminDropdown
+              @onChange={{this.onAdminDropdownChange}}
+              @options={{hash triggerOnChangeOnTab=false}}
+            />
           {{/if}}
 
           <button
