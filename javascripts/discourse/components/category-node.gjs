@@ -57,18 +57,6 @@ export default class CategoryNode extends Component {
                   {{topic.title}}
                 </a>
                 {{#if @isStaff}}
-                  
-    <button
-    class="category-node__edit-btn"
-    type="button"
-    title="Edit this topic"
-    {{on "click" (fn @onEditTopic topic)}}
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12">
-      <path fill="currentColor" d="M362.7 19.3c25-25 65.5-25 90.5 0l39.5 39.5c25 25 25 65.5 0 90.5L188.5 453.5L96 480l26.5-92.5L362.7 19.3zM68.8 448l48.1-13.8l-34.3-34.3L68.8 448z"/>
-    </svg>
-    </button>
-
                   <button
                     class="category-node__delete-btn"
                     type="button"
