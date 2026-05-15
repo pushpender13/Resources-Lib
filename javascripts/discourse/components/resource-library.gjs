@@ -267,15 +267,6 @@ export default class ResourceLibrary extends Component {
     this.router.transitionTo("newCategory");
   }
 
-@action
-editTopic(topic) {
-  this.composer.open({
-    action: Composer.EDIT_TOPIC,
-    topic,
-    draftKey: `topic_${topic.id}`,
-    draftSequence: topic.draft_sequence || 0,
-  });
-}
 
 
   <template>
@@ -344,7 +335,6 @@ editTopic(topic) {
               @maxTopics={{this.topicsPerCategory}}
               @isStaff={{this.isStaffUser}}
               @onDeleteTopic={{this.deleteTopic}}
-              @onEditTopic={{this.editTopic}}
             />
           {{/each}}
         {{else}}
