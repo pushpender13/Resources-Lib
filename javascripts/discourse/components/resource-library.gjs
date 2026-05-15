@@ -344,6 +344,7 @@ editTopic(topic) {
               @maxTopics={{this.topicsPerCategory}}
               @isStaff={{this.isStaffUser}}
               @onDeleteTopic={{this.deleteTopic}}
+              @onEditTopic={{this.editTopic}}
             />
           {{/each}}
         {{else}}
