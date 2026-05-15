@@ -267,6 +267,17 @@ export default class ResourceLibrary extends Component {
     this.router.transitionTo("newCategory");
   }
 
+@action
+editTopic(topic) {
+  this.composer.open({
+    action: Composer.EDIT_TOPIC,
+    topic,
+    draftKey: `topic_${topic.id}`,
+    draftSequence: topic.draft_sequence || 0,
+  });
+}
+
+
   <template>
     <div class="resource-library">
       <div class="resource-library__header">
